@@ -570,124 +570,11 @@
 
 <script>
 /*
-  ok so. none of this is real. there is no server. "GET /vibe-check"
-  is a lie we tell in good faith. everything below just rolls dice
-  and formats the result like JSON because that's funnier than
-  just... saying a random word.
-
-  if you're reading this in devtools: hi. yes the api is fake.
-  no, the vibes are real.
+  this hits the real endpoint. same one curl hits.
+  the "try it" box below is not a simulation, it's a fetch() call.
 */
 
-// the 20+ official vibe classifications, as ratified by absolutely no one
-const VIBES = [
-  "immaculate",
-  "cooked",
-  "mid",
-  "chaotic neutral",
-  "suspiciously good",
-  "certified unhinged",
-  "low-key thriving",
-  "high-key spiraling",
-  "ok but make it weird",
-  "blessed",
-  "cursed",
-  "404 vibe not found",
-  "ascended",
-  "feral",
-  "unreasonably confident",
-  "quietly falling apart",
-  "main character energy",
-  "npc energy",
-  "delulu but in a fun way",
-  "touch grass advised",
-  "elite tier",
-  "concerning but funny",
-  "powered entirely by spite",
-  "running on 3 hours of sleep and hope"
-];
-
-// confidence levels, none of which mean anything statistically
-const CONFIDENCES = [
-  "suspiciously high",
-  "based on vibes alone",
-  "don't question it",
-  "98% certain, 2% lying",
-  "extremely confident, zero evidence",
-  "the council voted unanimously",
-  "moderate, like a shrug but official",
-  "low, but we're saying it with our chest",
-  "calculated using ancient math",
-  "trust the process",
-  "confidence interval: yes"
-];
-
-// 15+ recommendations, all unhinged, none actionable
-const RECOMMENDATIONS = [
-  "keep doing whatever you're doing bhai",
-  "stop. immediately. but also keep going",
-  "this is your sign. sign says nothing readable though",
-  "consult a raccoon before proceeding",
-  "proceed with caution, or don't, your call honestly",
-  "manifest harder",
-  "this energy belongs in a museum",
-  "do it for the plot",
-  "log off. but in a confident way",
-  "this is giving 'final boss' energy, act accordingly",
-  "drink some water and reassess in 10 minutes",
-  "the council suggests chaos, respectfully",
-  "rebrand and try again",
-  "this vibe has main character privileges, use wisely",
-  "absolutely not, but also yes",
-  "frame this moment. literally, get a frame",
-  "ask again after touching grass",
-  "send it. send it now. don't overthink",
-  "this requires a snack break first",
-  "you already know what to do, we're just confirming"
-];
-
-// the various "authorities" responsible for vibe certification
-const CHECKED_BY = [
-  "the vibe council",
-  "3 raccoons in a trenchcoat",
-  "ancient vibe scripture",
-  "a magic 8-ball with trust issues",
-  "your group chat (probably)",
-  "the ministry of mid energy",
-  "a fortune cookie that's seen too much",
-  "two pigeons and a calculator",
-  "the algorithm, allegedly",
-  "a very tired intern",
-  "the office printer (it knows things)",
-  "your horoscope's evil twin",
-  "the vibes department (unfunded)",
-  "a committee of one (it's a cat)",
-  "whoever left this comment unattended"
-];
-
-// grabs a random item from an array. groundbreaking stuff
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function randInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-// the "api call"
-function vibeCheck(query) {
-  return {
-    query: query || "",
-    vibe: pick(VIBES),
-    score: randInt(0, 100),
-    confidence: pick(CONFIDENCES),
-    recommendation: pick(RECOMMENDATIONS),
-    red_flags: randInt(0, 5),
-    certified: Math.random() > 0.5,
-    checked_by: pick(CHECKED_BY),
-    timestamp: new Date().toISOString()
-  };
-}
+const API_URL = "/vibe-check";
 
 // hand-rolled syntax highlighting because adding a library for this felt wrong
 function renderJSON(obj) {
@@ -733,8 +620,8 @@ const input = document.getElementById("vibe-input");
 const btn = document.getElementById("vibe-btn");
 const responseArea = document.getElementById("response-area");
 
-function runVibeCheck() {
-  const query = input.value.trim() || "(empty, but ok, we'll vibe-check the void)";
+async function runVibeCheck() {
+  const query = input.value.trim();
 
   btn.disabled = true;
   btn.textContent = "Checking...";
@@ -746,16 +633,19 @@ function runVibeCheck() {
     </div>
   `;
 
-  // 800ms is the scientifically correct amount of fake loading
-  setTimeout(() => {
-    const result = vibeCheck(query);
+  const startedAt = performance.now();
+
+  try {
+    const res = await fetch(`${API_URL}?q=${encodeURIComponent(query)}`);
+    const result = await res.json();
+    const elapsed = Math.round(performance.now() - startedAt);
     const json = renderJSON(result);
 
     responseArea.innerHTML = `
       <div class="code-block">
         <div class="status-line">
-          <span class="status-pill">200 OK</span>
-          <span>${(60 + Math.random() * 90).toFixed(0)}ms</span>
+          <span class="status-pill">${res.status} ${res.statusText}</span>
+          <span>${elapsed}ms</span>
           <span style="margin-left:auto;">application/json</span>
         </div>
         <div class="code-header">
@@ -775,10 +665,21 @@ function runVibeCheck() {
     document.getElementById("copy-response").addEventListener("click", (e) => {
       copyText(JSON.stringify(result, null, 2), e.target);
     });
+  } catch (err) {
+    responseArea.innerHTML = `
+      <div class="code-block">
+        <div class="status-line">
+          <span class="status-pill" style="color:var(--red); background:#f8717118;">ERROR</span>
+          <span>the vibe council is unreachable</span>
+        </div>
+        <div class="code-header"><span>Response</span></div>
+        <pre>${err.message}</pre>
+      </div>
+    `;
+  }
 
-    btn.disabled = false;
-    btn.textContent = "Send request";
-  }, 800);
+  btn.disabled = false;
+  btn.textContent = "Send request";
 }
 
 btn.addEventListener("click", runVibeCheck);

@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "vibe-check-api",
+  "main": "vibe-check.js",
+  "compatibility_date": "2026-06-13",
+  "observability": {
+    "enabled": true
+  },
+  "routes": [
+    { "pattern": "vibe.xevrion.dev/vibe-check*", "zone_name": "xevrion.dev" }
+  ]
+}

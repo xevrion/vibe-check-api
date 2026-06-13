@@ -108,9 +108,14 @@ GitHub Pages, Netlify, Vercel, a USB stick, doesn't matter.
 
 ## local dev
 
+on linux:
+
 ```bash
-open index.html
+xdg-open index.html
 ```
+
+or just double-click it in your file manager, or drag it into a
+browser tab, whatever. it's a static file, it doesn't care.
 
 that's it. that's the dev environment. no `npm install`, no build
 step, no `.env`, nothing to configure. if it's broken, it's broken in
